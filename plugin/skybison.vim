@@ -15,6 +15,8 @@ if exists('g:skybison_loaded')
 endif
 let g:skybison_loaded = 1
 
+let g:skybison_line_count = 12
+
 " Runs command and cleans up to prepare to quit
 function s:RunCommandAndQuit(cmdline)
 	" reset changed settings
@@ -75,10 +77,10 @@ function SkyBison(initcmdline)
 	let &winheight = 1
 
 	" setup output window
-	botright 11new
+	exec "botright".g:skybison_line_count."new"
 	let s:sbwinnr = winnr()
 	normal "10oggzt"
-	for l:linenumber in range(1,11)
+	for l:linenumber in range(1,g:skybison_line_count)
 		call setline(l:linenumber,"")
 	endfor
 	nohlsearch
@@ -185,7 +187,7 @@ function SkyBison(initcmdline)
 		" from c_ctrl-a.  If that is the case, strip the non-completion terms.
 		" Otherwise, there was no completion - return an empty list.
 		if has_key(l:d, 'cmdline') && l:d['cmdline'] !~ ''
-			let l:results = split(l:d['cmdline'],'\\\@<!\s\+')[abs(len(l:cmdline_terms)-1):]
+			let l:results = reverse(split(l:d['cmdline'],'\\\@<!\s\+')[abs(len(l:cmdline_terms)-1):])
 		else
 			let l:results = []
 		endif
@@ -197,11 +199,11 @@ function SkyBison(initcmdline)
 		" clear buffer
 		%normal "_D
 		let l:counter = 1
-		let l:linenumber = 10-len(l:results[0:8])
-		if len(l:results) > 1 && len(l:results) < 10
+		let l:linenumber = g:skybison_line_count-1-len(l:results[0:g:skybison_line_count-3])
+		if len(l:results) > 1 && len(l:results) < g:skybison_line_count-1
 			let l:linenumber+=1
 		endif
-		for l:result in l:results[0:8]
+		for l:result in l:results[0:g:skybison_line_count-3]
 			if l:numberselect == 1
 				call setline(l:linenumber,l:counter." ".l:result)
 			else
@@ -211,25 +213,25 @@ function SkyBison(initcmdline)
 			let l:counter+=1
 		endfor
 		if len(l:results) == 0
-			call setline(10,"[No Results]")
+			call setline(g:skybison_line_count-1,"[No Results]")
 		elseif len(l:results) == 1
 			if len(l:cmdline_terms) == l:vcount && l:vcount != 0
-				let l:cmdline = l:cmdline_head != "" ?  l:cmdline_head.' '.l:results[0] : l:results[0]
+				let l:cmdline = l:cmdline_head != "" ?  l:cmdline_head.' '.l:results[len(l:results)-1] : l:results[len(l:results)-1]
 				break " run cmdline outside of try/catch
 			else
 				if l:ctrlv
-					call setline(10,'Press <CR> to run cmdline as entered')
+					call setline(g:skybison_line_count-1,'Press <CR> to run cmdline as entered')
 				else
-					call setline(10,'Press <CR> to select and run with "'.l:results[0].'"')
+					call setline(g:skybison_line_count-1,'Press <CR> to select and run with "'.l:results[len(l:results)-1].'"')
 				endif
 			endif
-		elseif len(l:results) > 9
-			call setline(10,"-- more --")
+		"elseif len(l:results) > 9
+			"call setline(g:skybison_line_count-1,"-- more --")
 		endif
 		if l:ctrlv
-			call setline(11,":".l:cmdline."^")
+			call setline(g:skybison_line_count,":".l:cmdline."^")
 		else
-			call setline(11,":".l:cmdline."_")
+			call setline(g:skybison_line_count,":".l:cmdline."_")
 		endif
 		redraw
 
@@ -272,16 +274,21 @@ function SkyBison(initcmdline)
 			if len(l:results) > 0
 				let l:d={}
 				" Huge thanks to ZyX-I for this line as well
-				execute "silent normal! :".l:fuzzed_cmdline."\<c-l>\<c-\>eextend(d, {'cmdline':getcmdline()}).cmdline\n"
-				let l:cmdline = l:d['cmdline']
+
+				if get(g:, "skybison_fuzz",0) == 1 || get(g:, "skybison_fuzz",0) == 2
+					let l:cmdline = l:cmdline_head != "" ?  l:cmdline_head.' '.l:results[-1] : l:results[-1]
+				else
+					execute "silent normal! :".l:fuzzed_cmdline."\<c-l>\<c-\>eextend(d, {'cmdline':getcmdline()}).cmdline\n"
+					let l:cmdline = l:d['cmdline']
+				endif
 			endif
 		elseif l:input == "\<cr>"
-			if len(l:results) == 1
-				let l:cmdline = l:cmdline_head != "" ?  l:cmdline_head.' '.l:results[0] : l:results[0]
+			"if len(l:results) == 1
+				let l:cmdline = l:cmdline_head != "" ?  l:cmdline_head.' '.l:results[-1] : l:results[-1]
 				break " run cmdline outside of try/catch
-			else
-				break " run cmdline outside of try/catch
-			endif
+			"else
+				"break " run cmdline outside of try/catch
+			"endif
 		elseif l:input == "\<c-p>" || l:input == "\<up>"
 			if l:histnr > 0
 				if l:histnr == histnr(':') + 1
