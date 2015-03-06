@@ -89,9 +89,13 @@ function SkyBison(initcmdline)
 	setlocal nonumber
 	setlocal nowrap
 	setlocal bufhidden=delete
-	if exists("&relativenumber")
+	"if exists("&relativenumber")
+	if l:numberselect == 1
+		setlocal relativenumber
+	else
 		setlocal norelativenumber
 	endif
+	"endif
 	" line numbering on left
 	syntax match LineNr  /^[0-9·]/
 	" -- more -- message
@@ -204,11 +208,11 @@ function SkyBison(initcmdline)
 			let l:linenumber+=1
 		endif
 		for l:result in l:results[0:g:skybison_line_count-3]
-			if l:numberselect == 1
-				call setline(l:linenumber,l:counter." ".l:result)
-			else
-				call setline(l:linenumber,"· ".l:result)
-			endif
+			"if l:numberselect == 1
+				"call setline(l:linenumber,l:counter." ".l:result)
+			"else
+				call setline(l:linenumber, l:result)
+			"endif
 			let l:linenumber+=1
 			let l:counter+=1
 		endfor
@@ -308,7 +312,7 @@ function SkyBison(initcmdline)
 		elseif l:input == "\<c-g>"
 			let l:numberselect = 1 - l:numberselect
 		elseif l:input =~ "[1-9]" && l:numberselect == 1 && len(l:results) >= l:input
-			let l:cmdline = l:cmdline_head.' '.l:results[l:input-1]
+			let l:cmdline = l:cmdline_head.' '.l:results[-l:input]
 		else
 			let l:cmdline.=l:input
 		endif
