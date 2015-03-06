@@ -224,9 +224,9 @@ function SkyBison(initcmdline)
 				break " run cmdline outside of try/catch
 			else
 				if l:ctrlv
-					call setline(g:skybison_line_count-1,'Press <CR> to run cmdline as entered')
+					call setline(g:skybison_line_count-1,'[ Press <CR> to run cmdline as entered ]')
 				else
-					call setline(g:skybison_line_count-1,'Press <CR> to select and run with "'.l:results[len(l:results)-1].'"')
+					call setline(g:skybison_line_count-1,'[ Press <CR> to select and run with "'.l:results[len(l:results)-1].'" ]')
 				endif
 			endif
 		"elseif len(l:results) > 9
@@ -287,12 +287,12 @@ function SkyBison(initcmdline)
 				endif
 			endif
 		elseif l:input == "\<cr>"
-			"if len(l:results) == 1
+			if len(l:results) == 1
 				let l:cmdline = l:cmdline_head != "" ?  l:cmdline_head.' '.l:results[-1] : l:results[-1]
 				break " run cmdline outside of try/catch
-			"else
-				"break " run cmdline outside of try/catch
-			"endif
+			else
+				break " run cmdline outside of try/catch
+			endif
 		elseif l:input == "\<c-p>" || l:input == "\<up>"
 			if l:histnr > 0
 				if l:histnr == histnr(':') + 1
